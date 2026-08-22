@@ -239,7 +239,7 @@ class URLDiscovery:
 
         return urls, children
 
-    async def fetch_sitemap_urls_recursive(self, sitemap_list: List[str], max_urls: int = 1000) -> List[str]:
+    async def fetch_sitemap_urls_recursive(self, sitemap_list: List[str], max_urls: int = 5000) -> List[str]:
         """Recursively process sitemap index files concurrently with 10-15s timeouts."""
         candidate_sitemaps = list(sitemap_list)
         standard = [
@@ -287,7 +287,7 @@ class URLDiscovery:
         logger.info(f"Recursively extracted {len(extracted)} URLs from sitemaps.")
         return list(extracted)
 
-    async def crawl_bfs_internal_links(self, start_urls: List[str], max_depth: int = 2, max_urls: int = 400) -> List[str]:
+    async def crawl_bfs_internal_links(self, start_urls: List[str], max_depth: int = 3, max_urls: int = 2000) -> List[str]:
         """Concurrent multi-depth BFS queue crawl to discover deep internal links across base domain."""
         discovered: Set[str] = set(start_urls)
         queue: List[Tuple[str, int]] = [(u, 0) for u in start_urls[:10]]

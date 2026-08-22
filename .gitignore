@@ -1,0 +1,24 @@
+# Virtual environment
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Output
+output/
+!output/.gitkeep
+
+# Environment & Sensitive data
+.env
+.env.*
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# Git worktree backup
+.git-worktree-backup/

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORP INTEL | Entity Intelligence & Due Diligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #06090e; color: #d1d5db; font-family: 'Inter', sans-serif; }
+        .console-font { font-family: 'Fira Code', monospace; font-size: 0.80rem; line-height: 1.55; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #090d16; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #334155; }
+        .glow-btn { box-shadow: 0 0 12px rgba(79,70,229,0.45); }
+        .glow-btn:hover { box-shadow: 0 0 20px rgba(79,70,229,0.7); }
+        .tab-active { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+        .tab-inactive { background: transparent; color: #64748b; border-color: transparent; }
+        .tab-inactive:hover { color: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-4 gap-3 select-none">
+
+    <!-- Top Navbar -->
+    <header class="flex items-center justify-between gap-4 bg-[#0b0f19] border border-[#172033] rounded-lg px-4 py-2.5 shadow-xl">
+        <div class="flex items-center gap-2.5">
+            <div class="flex items-center justify-center w-7 h-7 rounded bg-gradient-to-br from-indigo-600 to-violet-700 font-black text-white text-xs shadow-md shadow-indigo-600/40">DD</div>
+            <div class="flex items-center gap-1.5">
+                <span class="font-extrabold text-sm tracking-wider text-white">CORP INTEL</span>
+                <span class="text-[10px] font-bold text-indigo-400 opacity-90 px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">AI DILIGENCE</span>
+            </div>
+        </div>
+
+        <div class="flex flex-1 max-w-xl items-center bg-[#05080e] border border-[#1f2d47] rounded-md px-3 py-1.5 focus-within:border-indigo-500 transition-all">
+            <span class="text-xs font-mono text-slate-500 pr-2">https://</span>
+            <input type="text" id="domain-input" value="" placeholder="e.g. brewdog.com or stripe.com"
+                   class="flex-1 bg-transparent border-none text-xs text-slate-100 placeholder-slate-600 focus:outline-none font-mono min-w-0">
+            <div class="flex items-center gap-1.5 px-2 py-0.5 mr-2 bg-[#0b0f19] rounded border border-[#1e293b]">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">PAGES:</span>
+                <select id="max-pages-select" class="bg-transparent text-xs font-mono font-bold text-indigo-400 focus:outline-none cursor-pointer">
+                    <option value="5" class="bg-[#0b0f19]">5</option>
+                    <option value="10" selected class="bg-[#0b0f19]">10</option>
+                    <option value="20" class="bg-[#0b0f19]">20</option>
+                    <option value="30" class="bg-[#0b0f19]">30</option>
+                    <option value="50" class="bg-[#0b0f19]">50</option>
+                </select>
+            </div>
+            <button id="crawl-btn" class="bg-[#4338ca] hover:bg-[#4f46e5] text-white font-bold text-xs uppercase tracking-wider px-4 py-1.5 rounded border border-indigo-400/40 glow-btn transition-all active:scale-95 whitespace-nowrap">
+                CRAWL DOMAIN
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 pr-2">
+            <span id="system-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="system-status-text" class="tracking-wider uppercase text-[10px] text-emerald-400 font-bold">SYSTEM READY</span>
+        </div>
+    </header>
+
+    <!-- Top 3-Column Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-[380px]">
+
+        <!-- History -->
+        <div class="lg:col-span-2 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">HISTORY</span>
+                <span id="history-count" class="text-[10px] font-bold text-slate-400">0</span>
+            </div>
+            <div id="history-list" class="flex-1 p-2 space-y-1.5 overflow-y-auto custom-scroll">
+                <div class="p-3 text-center text-xs text-slate-500">No prior crawls.</div>
+            </div>
+        </div>
+
+        <!-- Live Console -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-200 tracking-wider uppercase">LIVE PIPELINE CONSOLE</span>
+                <span id="sse-badge" class="text-[10px] font-mono font-bold text-emerald-400 tracking-wider">SSE: READY</span>
+            </div>
+            <div id="console-logs" class="flex-1 p-3 bg-[#05080e] overflow-y-auto console-font custom-scroll text-slate-300 max-h-[360px] min-h-[320px]">
+                <div class="text-slate-500">[00:00:00] INFO Ready. Enter a domain and click CRAWL DOMAIN.</div>
+            </div>
+        </div>
+
+        <!-- Extracted Entity Card -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden justify-between">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-200 tracking-wider uppercase">EXTRACTED ENTITY INTEL</span>
+                <span id="confidence-badge" class="text-[10px] font-bold text-slate-500 tracking-wider">CONFIDENCE: —</span>
+            </div>
+            <div class="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="flex items-start gap-3 bg-[#080c14] p-3 rounded border border-[#172033]">
+                    <div id="entity-avatar" class="flex items-center justify-center w-8 h-8 rounded bg-[#151d30] border border-[#22304d] text-indigo-400 font-bold text-sm">—</div>
+                    <div class="flex-1 min-w-0">
+                        <h3 id="card-company-name" class="font-bold text-sm text-white">—</h3>
+                        <p id="card-desc" class="text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">No company data loaded.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">LEGAL NAME</span>
+                        <span id="card-legal-name" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">COMPANY NUMBER</span>
+                        <span id="card-reg-no" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">VAT NUMBER</span>
+                        <span id="card-vat-no" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">STATUS / TYPE</span>
+                        <span id="card-status-type" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">ADDRESS</span>
+                        <span id="card-location" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">CONTACT</span>
+                        <span id="card-contact" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                </div>
+                <div id="ch-auto-status" class="pt-0.5 text-[10px] text-center text-slate-500 italic">
+                    🇬🇧 UK companies are verified automatically during crawl
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
+
+        <!-- Left: company_data.json — SCRAPED DATA ONLY -->
+        <div class="lg:col-span-7 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-[#172033] bg-[#080c14]">
+                <div class="flex items-center gap-2">
+                    <span class="text-amber-400 text-xs">🔍</span>
+                    <span class="text-[11px] font-mono font-bold text-slate-300">scraped_data.json</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold">WEBSITE ONLY</span>
+                </div>
+                <button id="copy-json-btn" class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-[#151d30] hover:bg-[#1f2b47] text-slate-300 border border-[#22304d] transition-all">
+                    <span id="copy-text">COPY</span>
+                </button>
+            </div>
+            <pre id="json-viewer" class="p-3 bg-[#05080e] console-font text-slate-300 overflow-auto custom-scroll max-h-[360px] min-h-[220px]">{
+  "status": "idle",
+  "message": "Enter domain and start crawl."
+}</pre>
+        </div>
+
+        <!-- Right: Tabbed — Wikipedia | Official Registry -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <!-- Tab Headers -->
+            <div class="flex items-center border-b border-[#172033] bg-[#080c14] px-2 pt-1.5 gap-1">
+                <button id="tab-wiki-btn" onclick="switchTab('wiki')"
+                    class="tab-active text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all">
+                    📚 WIKIPEDIA
+                </button>
+                <button id="tab-official-btn" onclick="switchTab('official')"
+                    class="tab-inactive text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all">
+                    🏛️ OFFICIAL REGISTRY
+                </button>
+                <div class="flex-1"></div>
+                <span id="right-panel-badge" class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 mr-1 mb-1">
+                    STANDBY
+                </span>
+            </div>
+
+            <!-- Wikipedia Tab -->
+            <div id="tab-wiki" class="flex-1 flex flex-col">
+                <pre id="wiki-viewer" class="flex-1 p-3 bg-[#05080e] console-font text-cyan-200/90 overflow-auto custom-scroll max-h-[360px] min-h-[220px]">{
+  "wikipedia": null,
+  "message": "Wikipedia enrichment will appear here after crawl."
+}</pre>
+            </div>
+
+            <!-- Official Registry Tab (hidden by default) -->
+            <div id="tab-official" class="flex-1 flex-col hidden">
+                <pre id="official-viewer" class="flex-1 p-3 bg-[#05080e] console-font text-emerald-200/90 overflow-auto custom-scroll max-h-[360px] min-h-[220px]">{
+  "official_registry": null,
+  "message": "Registry data will appear here after crawl completes."
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Element refs ──────────────────────────────────────────────────────
+        const domainInput       = document.getElementById('domain-input');
+        const crawlBtn          = document.getElementById('crawl-btn');
+        const consoleLogs       = document.getElementById('console-logs');
+        const sseBadge          = document.getElementById('sse-badge');
+        const confidenceBadge   = document.getElementById('confidence-badge');
+        const systemDot         = document.getElementById('system-dot');
+        const systemStatusText  = document.getElementById('system-status-text');
+        const cardCompanyName   = document.getElementById('card-company-name');
+        const cardDesc          = document.getElementById('card-desc');
+        const cardLegalName     = document.getElementById('card-legal-name');
+        const cardRegNo         = document.getElementById('card-reg-no');
+        const cardVatNo         = document.getElementById('card-vat-no');
+        const cardStatusType    = document.getElementById('card-status-type');
+        const cardLocation      = document.getElementById('card-location');
+        const cardContact       = document.getElementById('card-contact');
+        const entityAvatar      = document.getElementById('entity-avatar');
+        const jsonViewer        = document.getElementById('json-viewer');
+        const wikiViewer        = document.getElementById('wiki-viewer');
+        const officialViewer    = document.getElementById('official-viewer');
+        const rightPanelBadge   = document.getElementById('right-panel-badge');
+        const copyJsonBtn       = document.getElementById('copy-json-btn');
+        const copyText          = document.getElementById('copy-text');
+        const historyList       = document.getElementById('history-list');
+        const historyCount      = document.getElementById('history-count');
+
+        // ── State — three separate data buckets ───────────────────────────────
+        let eventSource     = null;
+        let scrapedData     = null;   // website scraping only (shown in json-viewer)
+        let wikiData        = null;   // wikipedia enrichment
+        let officialData    = null;   // companies house official registry
+        let crawlHistory    = JSON.parse(localStorage.getItem('crawl_history') || '[]');
+        let currentTab      = 'wiki';
+
+        // ── Tab switching ─────────────────────────────────────────────────────
+        function switchTab(tab) {
+            currentTab = tab;
+            const wikiTab     = document.getElementById('tab-wiki');
+            const officialTab = document.getElementById('tab-official');
+            const wikiBtn     = document.getElementById('tab-wiki-btn');
+            const officialBtn = document.getElementById('tab-official-btn');
+
+            if (tab === 'wiki') {
+                wikiTab.classList.remove('hidden');
+                wikiTab.classList.add('flex');
+                officialTab.classList.add('hidden');
+                officialTab.classList.remove('flex');
+                wikiBtn.className     = 'tab-active text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all';
+                officialBtn.className = 'tab-inactive text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all';
+            } else {
+                officialTab.classList.remove('hidden');
+                officialTab.classList.add('flex');
+                wikiTab.classList.add('hidden');
+                wikiTab.classList.remove('flex');
+                officialBtn.className = 'tab-active text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all';
+                wikiBtn.className     = 'tab-inactive text-[10px] font-bold px-3 py-1.5 rounded-t border border-b-0 tracking-wider uppercase transition-all';
+            }
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function getTimestamp() {
+            return `[${new Date().toTimeString().split(' ')[0]}]`;
+        }
+
+        function appendLog(tag, msg) {
+            const colors = {
+                PHASE: 'text-indigo-400 font-semibold',
+                INFO:  'text-slate-300',
+                SUCCESS: 'text-emerald-400 font-semibold',
+                WARN:  'text-amber-400',
+                ERROR: 'text-rose-400 font-bold'
+            };
+            const line = document.createElement('div');
+            line.className = `${colors[tag] || 'text-slate-300'} mb-0.5`;
+            line.innerText = `${getTimestamp()} ${tag} ${msg}`;
+            consoleLogs.appendChild(line);
+            consoleLogs.scrollTop = consoleLogs.scrollHeight;
+        }
+
+        function populateEntityCard(data) {
+            const name = data.company_name || data.legal_name || data.domain || '—';
+            cardCompanyName.innerText = name;
+            entityAvatar.innerText = name !== '—' ? name.charAt(0).toUpperCase() : '—';
+            cardDesc.innerText = data.business_description || 'No description extracted.';
+            cardLegalName.innerText = data.legal_name || '—';
+            cardRegNo.innerText = data.registration_number || '—';
+            cardVatNo.innerText = data.vat_tax_number || '—';
+            const st = [data.company_status, data.company_type].filter(Boolean).join(' / ');
+            cardStatusType.innerText = st || '—';
+            const location = data.full_address || [data.city, data.country].filter(Boolean).join(', ') || '—';
+            cardLocation.innerText = location;
+            const contact = [data.email, data.phone].filter(Boolean).join(' | ') || '—';
+            cardContact.innerText = contact;
+
+            // Confidence badge
+            const conf = data.identity_confidence;
+            if (conf !== undefined && conf !== null) {
+                const pct = Math.round(conf * 100);
+                confidenceBadge.innerText = `${pct}% CONFIDENCE`;
+                confidenceBadge.className = `text-[10px] font-bold tracking-wider ${pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-slate-400'}`;
+            } else if (data.identity_match) {
+                confidenceBadge.innerText = '100% CONFIDENCE';
+                confidenceBadge.className = 'text-[10px] font-bold text-emerald-400 tracking-wider';
+            } else {
+                confidenceBadge.innerText = 'CONFIDENCE: —';
+                confidenceBadge.className = 'text-[10px] font-bold text-slate-500 tracking-wider';
+            }
+        }
+
+        // ── History ───────────────────────────────────────────────────────────
+        function updateHistoryUI() {
+            historyCount.innerText = crawlHistory.length;
+            if (!crawlHistory.length) {
+                historyList.innerHTML = '<div class="p-3 text-center text-xs text-slate-500">No prior crawls.</div>';
+                return;
+            }
+            historyList.innerHTML = crawlHistory.map((item, idx) => `
+                <div onclick="loadHistoryItem(${idx})" class="p-2.5 rounded bg-[#0e1422] border border-[#1c273e] cursor-pointer hover:border-indigo-500/50 transition-all">
+                    <div class="font-bold text-xs text-slate-100">${item.domain || 'unknown'}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${item.company_name || item.legal_name || '—'}</div>
+                </div>
+            `).join('');
+        }
+
+        function saveToHistory(data) {
+            if (!data?.domain) return;
+            const idx = crawlHistory.findIndex(h => h.domain === data.domain);
+            if (idx >= 0) crawlHistory[idx] = data;
+            else { crawlHistory.unshift(data); if (crawlHistory.length > 20) crawlHistory.pop(); }
+            localStorage.setItem('crawl_history', JSON.stringify(crawlHistory));
+            updateHistoryUI();
+        }
+
+        function loadHistoryItem(idx) {
+            const item = crawlHistory[idx];
+            if (!item) return;
+            scrapedData = item;
+            populateEntityCard(item);
+            // Show scraped-only in json-viewer (strip CH and wiki enrichment fields)
+            jsonViewer.innerText = JSON.stringify(extractScrapedFields(item), null, 2);
+            domainInput.value = item.domain;
+            // Load official if available
+            if (item.official_registry_profile) {
+                officialData = item.official_registry_profile;
+                officialViewer.innerText = JSON.stringify(officialData, null, 2);
+                setRightBadge('REGISTRY CACHED', 'emerald');
+            }
+        }
+
+        // ── Extract only scraped (website) fields — strip CH enrichment ───────
+        function extractScrapedFields(data) {
+            const CH_ONLY_FIELDS = [
+                'official_registry_profile','official_registered_address',
+                'companies_house_resolution','companies_house_status',
+                'persons_with_significant_control','filing_history','charges','insolvency',
+                'identity_match','identity_match_method','identity_confidence',
+                'company_status','company_type','jurisdiction','sic_codes',
+                'directors','management'
+            ];
+            const out = {};
+            for (const [k, v] of Object.entries(data)) {
+                if (!CH_ONLY_FIELDS.includes(k)) out[k] = v;
+            }
+            return out;
+        }
+
+        function setRightBadge(text, color) {
+            const colors = {
+                emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                cyan:    'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                amber:   'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                slate:   'bg-slate-800 text-slate-400 border-slate-700'
+            };
+            rightPanelBadge.innerText = text;
+            rightPanelBadge.className = `text-[9px] font-bold px-2 py-0.5 rounded border mr-1 mb-1 ${colors[color] || colors.slate}`;
+        }
+
+        // ── CRAWL ─────────────────────────────────────────────────────────────
+        crawlBtn.onclick = () => {
+            let domain = domainInput.value.trim();
+            if (!domain) { alert('Please enter a domain (e.g. brewdog.com)'); return; }
+
+            // Reset state
+            scrapedData = null; wikiData = null; officialData = null;
+            consoleLogs.innerHTML = '';
+            jsonViewer.innerText = '{\n  "status": "crawling..."\n}';
+            wikiViewer.innerText = '{\n  "wikipedia": null,\n  "message": "Waiting for pipeline..."\n}';
+            officialViewer.innerText = '{\n  "official_registry": null,\n  "message": "Click button above after crawl completes."\n}';
+            setRightBadge('SCANNING', 'cyan');
+            switchTab('wiki');
+
+            sseBadge.innerText = 'SSE: STREAMING';
+            sseBadge.className = 'text-[10px] font-mono font-bold text-indigo-400 animate-pulse';
+            systemDot.className = 'w-2 h-2 rounded-full bg-indigo-400 animate-ping';
+            systemStatusText.innerText = 'ACTIVE CRAWL';
+            systemStatusText.className = 'tracking-wider uppercase text-[10px] text-indigo-400 font-bold';
+            crawlBtn.disabled = true;
+            crawlBtn.innerText = 'CRAWLING...';
+
+            appendLog('PHASE', `Starting crawl pipeline for: ${domain}`);
+            if (eventSource) eventSource.close();
+
+            const maxPages = document.getElementById('max-pages-select')?.value || '10';
+            eventSource = new EventSource(`/crawl?domain=${encodeURIComponent(domain)}&max_pages=${maxPages}`);
+
+            eventSource.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === 'log') {
+                    appendLog(msg.level || 'INFO', msg.msg);
+                }
+                else if (msg.type === 'json') {
+                    // ── This fires multiple times (after extraction, after CH merge)
+                    // We only update scrapedData on the FIRST json event (before CH data arrives)
+                    const incoming = msg.content;
+
+                    if (!scrapedData) {
+                        // First emission = pure website scraping result
+                        scrapedData = incoming;
+                        jsonViewer.innerText = JSON.stringify(extractScrapedFields(incoming), null, 2);
+                    } else {
+                        // Subsequent emissions have CH data merged in — update card only, keep scraped panel clean
+                        scrapedData = incoming;
+                        // Still keep scraped-only view in json panel
+                        jsonViewer.innerText = JSON.stringify(extractScrapedFields(incoming), null, 2);
+                        // If official_registry_profile arrived, stash it
+                        if (incoming.official_registry_profile) {
+                            officialData = incoming.official_registry_profile;
+                            officialViewer.innerText = JSON.stringify(officialData, null, 2);
+                            setRightBadge('REGISTRY READY', 'emerald');
+                            appendLog('SUCCESS', '✅ Official UK registry data loaded — see OFFICIAL REGISTRY tab');
+                        }
+                    }
+                    populateEntityCard(incoming);
+                    saveToHistory(incoming);
+                }
+                else if (msg.type === 'wiki_json') {
+                    // Wikipedia data → always goes to wiki tab
+                    wikiData = msg.content;
+                    wikiViewer.innerText = JSON.stringify(wikiData, null, 2);
+                    if (wikiData._domain_match) {
+                        setRightBadge('WIKI VERIFIED', 'cyan');
+                        appendLog('SUCCESS', `Wikipedia verified: ${wikiData._wikipedia_title || ''}`);
+                    } else {
+                        setRightBadge('WIKI UNVERIFIED', 'amber');
+                        appendLog('INFO', 'Wikipedia page found (domain not matched — supplementary only)');
+                    }
+                    // Auto-show wiki tab when data arrives
+                    if (currentTab === 'wiki') switchTab('wiki');
+                }
+                else if (msg.type === 'done') {
+                    sseBadge.innerText = 'SSE: COMPLETED';
+                    sseBadge.className = 'text-[10px] font-mono font-bold text-emerald-400';
+                    systemDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                    systemStatusText.innerText = 'SYSTEM READY';
+                    systemStatusText.className = 'tracking-wider uppercase text-[10px] text-emerald-400 font-bold';
+                    crawlBtn.disabled = false;
+                    crawlBtn.innerText = 'CRAWL DOMAIN';
+                    appendLog('SUCCESS', 'Pipeline complete.');
+                    eventSource.close();
+                }
+                else if (msg.type === 'error') {
+                    appendLog('ERROR', msg.msg);
+                    sseBadge.innerText = 'SSE: ERROR';
+                    sseBadge.className = 'text-[10px] font-mono font-bold text-rose-400';
+                    crawlBtn.disabled = false;
+                    crawlBtn.innerText = 'CRAWL DOMAIN';
+                    eventSource.close();
+                }
+            };
+
+            eventSource.onerror = () => {
+                sseBadge.innerText = 'SSE: DISCONNECTED';
+                crawlBtn.disabled = false;
+                crawlBtn.innerText = 'CRAWL DOMAIN';
+                eventSource.close();
+            };
+        };
+
+        // ── Copy scraped JSON ─────────────────────────────────────────────────
+        copyJsonBtn.onclick = () => {
+            navigator.clipboard.writeText(jsonViewer.innerText).then(() => {
+                copyText.innerText = 'COPIED!';
+                setTimeout(() => { copyText.innerText = 'COPY'; }, 2000);
+            });
+        };
+
+        updateHistoryUI();
+    </script>
+</body>
+</html>

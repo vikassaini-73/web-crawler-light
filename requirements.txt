@@ -1,0 +1,38 @@
+# HTTP client — used by url_discovery, wikipedia_fallback, uk/companies_house
+httpx>=0.28.1
+
+# Lightpanda — ultra-fast headless browser engine for high-performance crawling
+# (Requires binary installation in WSL/Linux)
+lightpanda-py>=0.1.0
+
+# spaCy — last-resort NER fallback for company_name when JSON-LD/tables/regex
+# extraction finds nothing at all (see extractor.py: extract_from_spacy_fallback)
+spacy>=3.8.0
+
+# HTML parsing — used by url_discovery (BFS link extraction) and parser
+beautifulsoup4>=4.12.3
+lxml>=5.3.0
+
+# Data models & validation
+pydantic>=2.10.0
+
+# Domain extraction — used by url_discovery and validator
+tldextract>=5.1.3
+
+# Regex extensions — used by extractor and validator
+regex>=2024.11.6
+
+# Fuzzy name matching — used by ny/new_york_resolver.py for company name scoring
+thefuzz>=0.22.1
+
+# Terminal output formatting — used by telemetry
+rich>=13.9.4
+
+# Environment variable loading
+python-dotenv>=1.0.1
+
+# Web framework & server
+fastapi>=0.115.0
+uvicorn>=0.32.0
+jinja2>=3.1.4
+python-multipart>=0.0.12

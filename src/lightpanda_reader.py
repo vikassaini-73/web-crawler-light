@@ -1,16 +1,8 @@
-"""
-Lightpanda Reader Module
-Uses the ultra-fast Lightpanda browser engine to fetch and render pages.
-Designed for high performance and low memory usage in WSL/Linux.
-
-This module uses the system binary directly to bypass Python 3.14 compatibility issues.
-"""
-
 import logging
 import os
 import asyncio
 import shutil
-import re
+import httpx
 from typing import List, Optional
 
 try:
@@ -26,27 +18,60 @@ def log_print(msg: str):
 class LightpandaReader:
     """
     Fetches rendered HTML using the Lightpanda CLI binary.
-    Bypasses Python version compatibility issues by using the system binary.
+    Automatically downloads the binary if missing (optimized for Vercel).
     """
 
     def __init__(self, concurrency: int = 5):
         self.concurrency = concurrency
-        # Find the binary in system PATH
-        self.bin_path = shutil.which("lightpanda")
+        self.bin_path = self._ensure_binary()
+
+    def _ensure_binary(self) -> Optional[str]:
+        """Checks for binary and downloads it if missing."""
+        # 1. Check system PATH
+        path = shutil.which("lightpanda")
+        if path:
+            return path
         
-        if not self.bin_path:
-            log_print("      [Lightpanda] ⚠ Warning: 'lightpanda' binary not found in PATH.")
-        else:
-            log_print(f"      [Lightpanda] Initialised via CLI — {self.bin_path}")
+        # 2. Check local project bin directory
+        local_bin = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "lightpanda")
+        if os.path.exists(local_bin):
+            try:
+                os.chmod(local_bin, 0o755)
+            except:
+                pass
+            return local_bin
+
+        # 3. Check Vercel /tmp directory
+        tmp_bin = "/tmp/lightpanda"
+        if os.path.exists(tmp_bin):
+            return tmp_bin
+
+        # 4. Download if missing (Standard for Vercel Hobby/Pro)
+        log_print("      [Lightpanda] Binary missing. Downloading engine (150MB)...")
+        try:
+            url = "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux"
+            with httpx.Client(follow_redirects=True, timeout=120.0) as client:
+                resp = client.get(url)
+                if resp.status_code == 200:
+                    with open(tmp_bin, "wb") as f:
+                        f.write(resp.content)
+                    os.chmod(tmp_bin, 0o755)
+                    log_print(f"      [Lightpanda] Engine ready at {tmp_bin}")
+                    return tmp_bin
+        except Exception as e:
+            log_print(f"      [Lightpanda] Download failed: {e}")
+
+        return None
 
     async def read_pages(self, urls: List[str]) -> List[PageContent]:
         total = len(urls)
         
         if not self.bin_path:
-            log_print(f"\n[3/5] ✗ Lightpanda binary missing. Cannot render pages.")
+            log_print(f"\n[3/5] ✗ Lightpanda engine not available. JS rendering disabled.")
+            # Fallback to simple HTTPX fetch could be added here if needed
             return []
 
-        log_print(f"\n[3/5] Reading {total} pages via Lightpanda CLI (JS Rendering)...")
+        log_print(f"\n[3/5] Reading {total} pages via Lightpanda (JS Rendering)...")
 
         results: List[PageContent] = []
         semaphore = asyncio.Semaphore(self.concurrency)
@@ -83,7 +108,7 @@ class LightpandaReader:
                     return page
 
                 except Exception as e:
-                    log_print(f"      [{idx}/{total}] ✗ Lightpanda CLI error for {url}: {e}")
+                    log_print(f"      [{idx}/{total}] ✗ Lightpanda engine error for {url}: {e}")
                     return None
 
         tasks = [fetch_task(url, i+1) for i, url in enumerate(urls)]

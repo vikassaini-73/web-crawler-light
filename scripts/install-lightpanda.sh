@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-BIN_DIR="bin"
+BIN_DIR="src/lightpanda_bin"
 BIN_NAME="lightpanda"
 BIN_PATH="$BIN_DIR/$BIN_NAME"
 URL="https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux"

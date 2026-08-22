@@ -32,12 +32,14 @@ class LightpandaReader:
         Order: Bundled (bin/) -> PATH -> Runtime Download (/tmp/)
         """
         # 1. Check for Build-time Bundled Binary (Priority 1)
-        # In Vercel, the project root contains the bin folder.
+        # In Vercel, the source files are in /var/task
         project_root = os.getcwd()
-        bundled_bin = os.path.join(project_root, "bin", "lightpanda")
         
-        # Also check relative to this file as a secondary root detection
-        file_relative_bin = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "lightpanda")
+        # Binary is now placed inside src/lightpanda_bin to ensure bundling
+        bundled_bin = os.path.join(project_root, "src", "lightpanda_bin", "lightpanda")
+        
+        # Fallback to path relative to this file
+        file_relative_bin = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lightpanda_bin", "lightpanda")
         
         for path in [bundled_bin, file_relative_bin]:
             if os.path.exists(path):

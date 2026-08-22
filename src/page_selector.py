@@ -15,6 +15,7 @@ LOCALE_ROOT_PATTERN = re.compile(
 )
 
 # Slugs categorized by relevance for company identity extraction
+# Weights are calibrated to prioritize legal and contact data first.
 KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     # Imprint, Legal & Registration (Highest priority for legal identity, VAT, reg number)
     "imprint": (15.0, "legal"),
@@ -28,13 +29,15 @@ KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     "company-information": (14.0, "legal"),
     "corporate-information": (14.0, "legal"),
     "registration": (13.0, "legal"),
-    "registered-office": (14.0, "legal"),
+    "registered-office": (14.5, "legal"),
     "terms": (11.0, "legal"),
     "terms-of-use": (11.0, "legal"),
     "terms-and-conditions": (11.0, "legal"),
     "terms-of-service": (11.0, "legal"),
     "privacy-policy": (9.0, "legal"),
     "privacy": (8.0, "legal"),
+    "policy": (7.0, "legal"),
+    "disclaimer": (8.0, "legal"),
 
     # About & Company Overview
     "about": (10.0, "about"),
@@ -52,6 +55,9 @@ KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     "overview": (8.0, "about"),
     "our-story": (9.0, "about"),
     "facts": (7.0, "about"),
+    "team": (10.0, "about"),
+    "our-team": (11.0, "about"),
+    "history": (8.0, "about"),
 
     # Contact & Locations
     "contact": (11.0, "contact"),
@@ -61,7 +67,7 @@ KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     "where-we-are": (11.0, "contact"),
     "locations": (11.0, "contact"),
     "offices": (10.0, "contact"),
-    "headquarters": (12.0, "contact"),
+    "headquarters": (12.5, "contact"),
     "global-locations": (11.0, "contact"),
     "help": (10.0, "contact"),
     "help-center": (9.0, "contact"),
@@ -69,6 +75,7 @@ KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     "store-locator": (9.0, "contact"),
     "find-us": (10.0, "contact"),
     "our-offices": (11.0, "contact"),
+    "support": (8.0, "contact"),
 
     # Leadership, Governance & Investors
     "investors": (10.0, "investor"),
@@ -80,18 +87,30 @@ KEYWORD_WEIGHTS: Dict[str, Tuple[float, str]] = {
     "governance": (9.0, "leadership"),
     "subsidiaries": (11.0, "about"),
     "group": (8.0, "about"),
-    "annual-reports": (9.0, "investor"),
+    "annual-reports": (10.0, "investor"),
+    "financials": (9.0, "investor"),
+    "sustainability": (8.0, "about"),
+    "esg": (8.0, "about"),
+    
+    # News & Press (Higher value for description/activity)
+    "newsroom": (9.0, "news"),
+    "press": (8.0, "news"),
+    "press-releases": (10.0, "news"),
+    "media": (7.0, "news"),
+    
+    # Pricing (Useful for business context)
+    "pricing": (9.0, "business"),
+    "plans": (8.0, "business"),
 }
 
-# Low value patterns — never useful for company identity extraction
+# Low value patterns — generally ignored or deprioritized
 LOW_VALUE_PATTERNS = [
-    r"/blog/", r"/news/", r"/article/", r"/posts/", r"/product/",
-    r"/products/", r"/item/", r"/shop/", r"/store/", r"/cart/",
+    r"/blog/", r"/article/", r"/posts/", r"/item/", r"/shop/", r"/store/", r"/cart/",
     r"/checkout/", r"/category/", r"/tag/", r"/author/", r"/search",
     r"/login", r"/signin", r"/signup", r"/register-user", r"/account",
     r"/download", r"/downloads", r"/docs/", r"/documentation/",
     r"/community/", r"/events/", r"/webinars/", r"/feed/",
-    r"/vacancies/", r"/jobs/", r"/careers/", r"/press/",
+    r"/vacancies/", r"/jobs/", r"/careers/",
 ]
 
 

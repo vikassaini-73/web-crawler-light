@@ -22,3 +22,6 @@ output/
 
 # Git worktree backup
 .git-worktree-backup/
+
+# Lightpanda binary (generated at build time)
+bin/

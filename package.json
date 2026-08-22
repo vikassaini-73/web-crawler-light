@@ -1,0 +1,8 @@
+{
+  "name": "company-domain-crawler",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "vercel-build": "bash scripts/install-lightpanda.sh"
+  }
+}

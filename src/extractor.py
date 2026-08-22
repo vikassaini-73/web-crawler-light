@@ -285,10 +285,24 @@ class CompanyDataExtractor:
                 self.add_candidate("brand_name", page.og_site_name, page.url, category, "meta_og_site_name", f"og:site_name: {page.og_site_name}", 0.75)
 
             if page.title:
-                t_parts = page.title.split("|")[0].split("-")[0].strip()
-                t_clean = re.sub(r"(?i)^(welcome\s+to|home\s+page\s+of|official\s+site\s+of|welcome)\s*", "", t_parts).strip()
-                if t_clean and len(t_clean) < 60:
-                    self.add_candidate("company_name", t_clean, page.url, category, "page_title", f"Title: {page.title}", 0.65)
+                t_parts = page.title.split("|")
+                if len(t_parts) < 2:
+                    t_parts = page.title.split("-")
+                
+                # If title is "History | Shell", the second part is often the brand
+                potential_names = [p.strip() for p in t_parts if p.strip()]
+                
+                GENERIC_TITLES = {"about", "history", "contact", "home", "homepage", "welcome", "services", "products", "our story", "who we are", "legal", "terms"}
+                
+                for candidate in potential_names:
+                    t_clean = re.sub(r"(?i)^(welcome\s+to|home\s+page\s+of|official\s+site\s+of|welcome)\s*", "", candidate).strip()
+                    if not t_clean or t_clean.lower() in GENERIC_TITLES or len(t_clean) < 2:
+                        continue
+                    
+                    if len(t_clean) < 60:
+                        # Higher confidence if it's the 2nd part of a "Page | Brand" title
+                        conf = 0.65 if candidate == potential_names[0] else 0.80
+                        self.add_candidate("company_name", t_clean, page.url, category, "page_title", f"Title: {page.title}", conf)
 
             if page.meta_description and len(page.meta_description) >= 30:
                 self.add_candidate("business_description", page.meta_description, page.url, category, "meta_description", f"meta description: {page.meta_description[:100]}", 0.75)
